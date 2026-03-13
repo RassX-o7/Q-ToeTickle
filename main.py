@@ -1,16 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 import time,random
-print((0)*2)
-print((0,)*2)
-print([0]*2)
-print([0,]*2)
-print([2,3] in [2,3,4])
-print([2,3,] in [2,3,4])
-for temp in range(9):""
-print(temp) # so use last value
-# window2=tk.Tk() even creating a .TK() makes a small white window
-# canvas=tk.Canvas(window,background="black")
 regions={1: "arg.x < 250 and arg.y < 250",
         2: "500 > arg.x > 250 and arg.y < 250",
         3: "750 > arg.x > 500 and arg.y < 250",
@@ -21,7 +11,6 @@ regions={1: "arg.x < 250 and arg.y < 250",
         8: "500 > arg.x > 250 and 750 > arg.y > 500",
         9: "750 > arg.x > 500 and 750 > arg.y > 500"
         }
-# regions =((0,0))
 CrossCoords={"1A":"0,0,250,250",
             "1B":"0,250,250,0",
             "2A":"250,0,500,250",
@@ -92,7 +81,7 @@ class TicTacToe:
                     if k == 3:
                         return win
                 else: break 
-            return False
+        return False #fixed indent
     @staticmethod
     def _checker(state,wins=wins):
         for win in wins:
@@ -113,7 +102,6 @@ class TicTacToe:
                     self.player_state.append(region)
                     break
             else : return
-            #MOST DEF NEED FOR ELSE , otherwise we need everything inside the eval if , if arg.xy situation satistfy then run computer chance otherwise nothing etcc 
             self.curr_move="computer"
             if (win_case:=TicTacToe._checker(self.player_state)):
                 self.canvas.create_line(eval(winLines[tuple(win_case)]),fill="red",width=10)
@@ -129,7 +117,7 @@ class TicTacToe:
             self.window.after(1000,self.computer_move)
     def computer_move(self):
         while (random_move:=random.randint(1,9)) in self.board_state:""
-        self.canvas.create_oval(eval(CircleCoords[random_move]),outline="white") # outline NOT fill
+        self.canvas.create_oval(eval(CircleCoords[random_move]),outline="white")
         self.computer_state.append(random_move)
         self.board_state.append(random_move)
         if (lose_case:=TicTacToe._checker(self.computer_state)):
