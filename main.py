@@ -50,11 +50,12 @@ winLines={ (1,2,3):"0,125,750,125",
         (4,5,6):"0,375,750,375",
         (7,8,9):"0,625,750,625"
         }
-
+temp = lambda x: print("temp")
 class TicTacToe:
     wins=[[1,2,3],[1,4,7],[1,5,9],[2,5,8],[3,6,9],[3,5,7],[4,5,6],[7,8,9]]
     def __init__(self,window:tk.Tk,first_move):
         self.window=window
+        self.window.geometry("750x775")
         # self.window.focus_force()
         self.first_move=first_move
         self.curr_move=first_move
@@ -151,22 +152,35 @@ class TicTacToe:
 
 class App:
     def __init__(self,window:tk.Tk):
-        self.window=window
-        self.window.geometry("200x100")
-        ttk.Label(self.window,text="Who Should Move First ?").pack()
-        ttk.Button(self.window,text="Player",command=self.player_first).pack()
-        ttk.Button(self.window,text="Computer",command=self.computer_first).pack()
+        self.window1=window
+        self.window1.geometry("200x200")
+        ttk.Label(self.window1,text="Select The Computer Model").pack()
+        self.computer_models=["Statistical","MinMax","Random","Q-Learning","Comparison"]
+        for model in self.computer_models:
+            # ttk.Button(self.window1, text=model,state= False if model!="Random" else True,command=lambda m=model: self.ttt_ui(computer=m)).pack(pady=3, fill='x', padx=20)
+            ttk.Button(self.window1, text=model,state= "disabled" if model!="Random" else "normal", command=lambda m=model: self.ttt_ui(computer=m)).pack(pady=3, fill='x', padx=20)
+            #disabled and normal NOT true/false
+    def clear_window(self): 
+        for wd in self.window1.winfo_children(): # NOTE the hardcoded window1 attr , default must be winow
+            wd.destroy()
+    def ttt_ui(self,computer=None):
+        for wiget in self.window1.winfo_children(): # OR use self.clear_winow() < custom wrapper func SAME THING
+            wiget.destroy()
+        self.window1.geometry("200x100")
+        ttk.Label(self.window1,text="Who Should Move First ?").pack(pady=(0,5))
+        ttk.Button(self.window1,text="Player",command=self.player_first).pack(pady=3)
+        # ttk.Button(self.window1,text="Computer",command=self.computer_first).pack(pady=4,fill="x") #try
+        ttk.Button(self.window1,text="Computer",command=self.computer_first).pack(pady=4)
     def player_first(self):
-        self.window.destroy()
-        window2=tk.Tk()
-        TTT=TicTacToe(window2,"player")
-        window2.mainloop()
+        self.clear_window()
+        TTT=TicTacToe(self.window1,"player")
+        # window1.mainloop()
     def computer_first(self):
-        self.window.destroy()
-        window3=tk.Tk()
-        TTT=TicTacToe(window3,"computer")
-        window3.focus_force() 
-        window3.mainloop()
+        # self.window1.destroy()
+        self.clear_window()
+        TTT=TicTacToe(self.window1,"computer")
+        # window3.focus_force() 
+        # window3.mainloop()
 window=tk.Tk()
 # window.geometry("800x800")
 window.title("TicTacToe")
