@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import time,random
+from playsound3 import playsound
 regions={1: "arg.x < 250 and arg.y < 250",
         2: "500 > arg.x > 250 and arg.y < 250",
         3: "750 > arg.x > 500 and arg.y < 250",
@@ -94,7 +95,7 @@ class TicTacToe:
         if self.curr_move == "player":
             for region in range(1,10):
                 if eval(regions[region]) and region not in self.board_state:
-                    print("new")
+                    # print("new")
                     self.canvas.create_line(eval(CrossCoords[f'{region}A']),fill="white",width=2)
                     self.canvas.create_line(eval(CrossCoords[f'{region}B']),fill="white",width=2)
                     self.board_state.append(region)
@@ -106,16 +107,24 @@ class TicTacToe:
                 self.canvas.create_line(eval(winLines[tuple(win_case)]),fill="red",width=10)
                 ttk.Label(self.window,text="Player WON !!").pack()
                 self.canvas.create_window((380,400),window=ttk.Label(master=self.window,text="Player Won",font=("Arial",40)))
+                try:
+                    playsound(r"assets\YouWin.mp3",block=False) # must be after label and all cuz it freezes untill sound over, #UPDATE no , still freezes because of tkinter waits for function to complete so playsound still activate #USE block arg
+                except:
+                    ""
                 self.curr_move=None 
                 return
             if len(self.board_state) == 9 :
                 ttk.Label(self.window,text="DRAW!!").pack()
                 self.canvas.create_window((380,400),window=ttk.Label(master=self.window,text="Its a Draw",font=("Arial",40)))
                 self.curr_move=None 
+                try:
+                    playsound(r"assets\Draw.mp3",block=False)# # must be after label and all cuz it freezes untill sound over, #UPDATE no , still freezes because of tkinter waits for function to complete so playsound still activate #USE block arg
+                except:
+                    ""
                 return
             self.window.after(1000,self.computer_move)
     def computer_move(self):
-        while (random_move:=random.randint(1,9)) in self.board_state:""
+        while (random_move:=random.randint(1,9)) in self.board_state: ""
         self.canvas.create_oval(eval(CircleCoords[random_move]),outline="white")
         self.computer_state.append(random_move)
         self.board_state.append(random_move)
@@ -123,11 +132,19 @@ class TicTacToe:
             self.canvas.create_line(eval(winLines[tuple(lose_case)]),fill="red",width=10)
             ttk.Label(self.window,text="COMPUTER WON !!").pack()
             self.canvas.create_window((380,400),window=ttk.Label(master=self.window,text="COMPUTER WON !!",font=("Arial",40)))
+            try:
+                playsound(r"assets\YouLose.mp3") # must be after label and all cuz it freezes untill sound over, #UPDATE no , still freezes because of tkinter waits for function to complete so playsound still activate #USE block arg
+            except:  # here let block = true , so kinda build for the lose of player
+                ""
             self.curr_move=None 
             return 
         if len(self.board_state) == 9 :
                 ttk.Label(self.window,text="DRAW!!").pack()
                 self.canvas.create_window((380,400),window=ttk.Label(master=self.window,text="Its a Draw",font=("Arial",40)))
+                try:
+                    playsound(r"assets\Draw.mp3",block=False) # must be after label and all cuz it freezes untill sound over, #UPDATE no , still freezes because of tkinter waits for function to complete so playsound still activate #USE block arg
+                except:
+                    ""
                 self.curr_move=None 
                 return
         self.curr_move="player"
