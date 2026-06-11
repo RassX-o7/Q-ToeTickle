@@ -191,8 +191,52 @@ class TicTacToe:
                     print("instawin")
                     computer_final_move=nxt
                     break
-
-
+        
+        elif self.computer_model == self.computer_models[1]: # MinMax
+            left_states = list(set([1,2,3,4,5,6,7,8,9]) - set(self.board_state))
+            #minmax slow for 1st move
+            # Hardcoding the center/corner shortcut saves processing time.
+            if len(self.board_state) == 0:
+                computer_final_move= 5 
+            else:
+                def minimax(v_player, v_computer, maxm):
+                    # Base Cases: Check if virtual states result in a win or draw
+                    if TicTacToe._checker(v_computer):
+                        return 1
+                    if TicTacToe._checker(v_player):
+                        return -1
+                    if len(v_player) +len(v_computer) == 9:
+                        return 0
+                    avail = list(set([1,2,3,4,5,6,7,8,9]) - set(v_player) - set(v_computer))
+                    
+                    if maxm:
+                        max_eval = -float('inf')
+                        for move in avail:
+                            v_computer.append(move)
+                            score = minimax(v_player, v_computer, False)
+                            v_computer.pop()
+                            max_eval = max(max_eval, score)
+                        return max_eval
+                    else:
+                        min_eval = float('inf')
+                        for move in avail:
+                            v_player.append(move)
+                            score = minimax(v_player, v_computer, True)
+                            v_player.pop() # Backtrack
+                            min_eval = min(min_eval, score)
+                        return min_eval
+                best_score = -float('inf')
+                computer_final_move = left_states[0] # Default fallback
+                
+                for move in left_states:
+                    # Create temporary shallow copies so we don't mess up the live game states
+                    sim_player = list(self.player_state)
+                    sim_computer = list(self.computer_state) + [move]
+                    score = minimax(sim_player, sim_computer, False)
+                    
+                    if score > best_score:
+                        best_score = score
+                        computer_final_move = move
         self.canvas.create_oval(eval(CircleCoords[computer_final_move]),outline="white")
         self.computer_state.append(computer_final_move)
         self.board_state.append(computer_final_move)
@@ -216,7 +260,6 @@ class TicTacToe:
                 self.curr_move=None 
                 return
         self.curr_move="player"
-
 class App:
     def __init__(self,window:tk.Tk):
         self.window1=window
@@ -225,7 +268,7 @@ class App:
         self.computer_models=["Statistical","MinMax","Random","Q-Learning","Comparison"]
         for model in self.computer_models:
             # ttk.Button(self.window1, text=model,state= False if model!="Random" else True,command=lambda m=model: self.ttt_ui(computer=m)).pack(pady=3, fill='x', padx=20)
-            ttk.Button(self.window1, text=model,state= "disabled" if model not in ["Random","Statistical"] else "normal", command=lambda m=model: self.ttt_ui(computer=m)).pack(pady=3, fill='x', padx=20)
+            ttk.Button(self.window1, text=model,state= "disabled" if model not in ["Random","Statistical","MinMax"] else "normal", command=lambda m=model: self.ttt_ui(computer=m)).pack(pady=3, fill='x', padx=20)
             #disabled and normal, NOT true/false
     def clear_window(self): 
         for wd in self.window1.winfo_children(): # NOTE the hardcoded window1 attr , default must be winow
