@@ -55,7 +55,8 @@ class TicTacToe:
     wins=[[1,2,3],[1,4,7],[1,5,9],[2,5,8],[3,6,9],[3,5,7],[4,5,6],[7,8,9]]
     def __init__(self,window:tk.Tk,first_move):
         self.window=window
-        self.window.geometry("750x775")
+        self.window.resizable(False,False)
+        self.window.geometry("750x790")
         # self.window.focus_force()
         self.first_move=first_move
         self.curr_move=first_move
@@ -69,7 +70,14 @@ class TicTacToe:
         self.computer_state=[]
         print(f"{self.first_move} moves first")
         self.canvas.pack()
-        self.window.bind("<Button-1>",func=self.player_move)
+        self.play_again_button=ttk.Button(self.window,text="Play Again",command=self.play_again)
+        self.reset_model_button=ttk.Button(self.window,text="Reset Settings",command=self.reset_model)
+        self.play_again_button.pack(anchor="e",side="left",padx=(270,0))
+        # self.play_again_button.pack(self.window,anchor="center",side="LEFT") # what was i thinking , winow in pack + Capital error
+        self.reset_model_button.pack(side="right",anchor="center",padx=(0,270))
+        # self.reset.pack(after=self.canvas)
+        # self.window.bind("<Button-1>",func=self.player_move)
+        self.canvas.bind("<Button-1>",func=self.player_move)
         if self.first_move=="computer":
             window.after(1000,self.computer_move)
     @staticmethod
@@ -92,6 +100,15 @@ class TicTacToe:
     @staticmethod
     def _checkerxx(state,wins=wins):
         return any(set(win).issubset(state) for win in wins)
+    def play_again(self):
+        self.clear_window()
+        TTT=TicTacToe(self.window,first_move=self.first_move)
+    def reset_model(self):
+        self.clear_window()
+        Appx_new=App(self.window)
+    def clear_window(self): 
+        for wd in self.window.winfo_children(): 
+            wd.destroy()
     def player_move(self,arg):
         if self.curr_move == "player":
             for region in range(1,10):
@@ -106,7 +123,7 @@ class TicTacToe:
             self.curr_move="computer"
             if (win_case:=TicTacToe._checker(self.player_state)):
                 self.canvas.create_line(eval(winLines[tuple(win_case)]),fill="red",width=10)
-                ttk.Label(self.window,text="Player WON !!").pack()
+                # ttk.Label(self.window,text="Player WON !!").pack()
                 self.canvas.create_window((380,400),window=ttk.Label(master=self.window,text="Player Won",font=("Arial",40)))
                 try:
                     playsound(r"assets\YouWin.mp3",block=False) # must be after label and all cuz it freezes untill sound over, #UPDATE no , still freezes because of tkinter waits for function to complete so playsound still activate #USE block arg
@@ -115,7 +132,7 @@ class TicTacToe:
                 self.curr_move=None 
                 return
             if len(self.board_state) == 9 :
-                ttk.Label(self.window,text="DRAW!!").pack()
+                # ttk.Label(self.window,text="DRAW!!").pack()
                 self.canvas.create_window((380,400),window=ttk.Label(master=self.window,text="Its a Draw",font=("Arial",40)))
                 self.curr_move=None 
                 try:
@@ -125,13 +142,15 @@ class TicTacToe:
                 return
             self.window.after(1000,self.computer_move)
     def computer_move(self):
+        if not self.canvas.winfo_exists():
+            return
         while (random_move:=random.randint(1,9)) in self.board_state: ""
         self.canvas.create_oval(eval(CircleCoords[random_move]),outline="white")
         self.computer_state.append(random_move)
         self.board_state.append(random_move)
         if (lose_case:=TicTacToe._checker(self.computer_state)):
             self.canvas.create_line(eval(winLines[tuple(lose_case)]),fill="red",width=10)
-            ttk.Label(self.window,text="COMPUTER WON !!").pack()
+            # ttk.Label(self.window,text="COMPUTER WON !!").pack()
             self.canvas.create_window((380,400),window=ttk.Label(master=self.window,text="COMPUTER WON !!",font=("Arial",40)))
             try:
                 playsound(r"assets\YouLose.mp3") # must be after label and all cuz it freezes untill sound over, #UPDATE no , still freezes because of tkinter waits for function to complete so playsound still activate #USE block arg
@@ -140,7 +159,7 @@ class TicTacToe:
             self.curr_move=None 
             return 
         if len(self.board_state) == 9 :
-                ttk.Label(self.window,text="DRAW!!").pack()
+                # ttk.Label(self.window,text="DRAW!!").pack()
                 self.canvas.create_window((380,400),window=ttk.Label(master=self.window,text="Its a Draw",font=("Arial",40)))
                 try:
                     playsound(r"assets\Draw.mp3",block=False) # must be after label and all cuz it freezes untill sound over, #UPDATE no , still freezes because of tkinter waits for function to complete so playsound still activate #USE block arg
@@ -174,15 +193,35 @@ class App:
     def player_first(self):
         self.clear_window()
         TTT=TicTacToe(self.window1,"player")
+        try:playsound(r"assets\initalize.mp3",block=False)
+        except:""
         # window1.mainloop()
     def computer_first(self):
         # self.window1.destroy()
         self.clear_window()
         TTT=TicTacToe(self.window1,"computer")
+        try:playsound(r"assets\initalize.mp3",block=False)
+        except:""
         # window3.focus_force() 
         # window3.mainloop()
+# file=open("ttt_cases/allCasesNoDumbforWinningAndLosingBoth.txt","rt")
+# allCases=file.read().splitlines()
+# caseList=[]
+# stateList=[]
+# winnerList=[]
+# futureWinCases=[]
+# for line in allCases:
+#     line.rstrip()
+#     L1=line.split(",",2)
+#     L1=[j.strip() for j in L1]
+#     caseList.append(eval(L1[2][6:])) 
+#     stateList.append(L1[0][8:])  # Win Draw
+#     winnerList.append(L1[1][9:]) # P1 P2 Nil
+# print(caseList)
 window=tk.Tk()
 # window.geometry("800x800")
 window.title("TicTacToe")
+window.lift()
+window.focus_force()
 AppX=App(window)
 window.mainloop()
