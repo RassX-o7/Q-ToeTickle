@@ -1,0 +1,11 @@
+{
+  "episodes": 200000,
+  "x_wins": 28015,
+  "x_win_pct": 14.01,
+  "o_wins": 15020,
+  "o_win_pct": 7.51,
+  "draws": 156965,
+  "draw_pct": 78.48,
+  "agent_x_states": 2422,
+  "agent_o_states": 2096
+}
