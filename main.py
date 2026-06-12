@@ -70,6 +70,8 @@ class TicTacToe:
         self.board_state=[]
         self.player_state=[]
         self.computer_state=[]
+        # if self.computer_model=="Comparision":
+        #     comapre=ComparisonWindow(window)
         print(f"{self.first_move} moves first")
         self.canvas.pack()
         self.play_again_button=ttk.Button(self.window,text="Play Again",command=self.play_again)
@@ -153,90 +155,11 @@ class TicTacToe:
         if self.computer_model == self.computer_models[2]:
             while (computer_final_move:=random.randint(1,9)) in self.board_state: ""
         elif self.computer_model==self.computer_models[0]:
-            # parse_case_file() only once not on each move
-            left_states=list(set([1,2,3,4,5,6,7,8,9])-set(self.board_state))
-            matches(self.board_state,caseList)
-            curr_total_moves=len(self.board_state)
-            # win_dict=dict()
-            win_dict={nxt:0 for nxt in left_states}
-            # lose_dict=dict() #include or not , maximsize win_dict-lose_dict?
-            lose_dict={nxt:0 for nxt in left_states}
-            
-            for case in futureCases:
-                nxt_move=case[curr_total_moves]
-                idx=caseList.index(case)
-                if stateList[idx]=="Win" and (winnerList[idx]== ("P2" if self.first_move == "player" else "P1" if self.first_move == "computer" else "")):                           
-                    win_dict[nxt_move]=win_dict.get(nxt_move,0)+1
-                elif stateList[idx]=="Win" and (winnerList[idx]== ("P1" if self.first_move == "player" else "P2" if self.first_move == "computer" else "")):
-                    lose_dict[nxt_move]=lose_dict.get(nxt_move,0)+1
-            final_dict={nxt:win_dict[nxt]-lose_dict[nxt] for nxt in left_states}
-            # computer_final_move = max(win_dict,key=win_dict.get) # check resource .get NOT get() , exec immediately , needs atleast 1 arg given 0
-            computer_final_move = max(final_dict,key=final_dict.get)
-            print(win_dict)
-            print(lose_dict)
-            print(final_dict)
-            for nxt in left_states:
-                temp_check=self.player_state.copy()
-                temp_check.append(nxt)
-                if self._checker(temp_check):
-                    print(temp_check)
-                    print("close")
-                    computer_final_move=nxt
-                    break
-            for nxt in left_states:
-                temp_check=self.computer_state.copy()
-                temp_check.append(nxt)
-                if self._checker(temp_check):
-                    print(temp_check)
-                    print("instawin")
-                    computer_final_move=nxt
-                    break
-        
+            stat=statModel(self.board_state,self.player_state,self.computer_state,self.first_move)
+            computer_final_move=stat.pred_next()
         elif self.computer_model == self.computer_models[1]: # MinMax
-            left_states = list(set([1,2,3,4,5,6,7,8,9]) - set(self.board_state))
-            #minmax slow for 1st move
-            # Hardcoding the center/corner shortcut saves processing time.
-            if len(self.board_state) == 0:
-                computer_final_move= 5 
-            else:
-                def minimax(v_player, v_computer, maxm):
-                    # Base Cases: Check if virtual states result in a win or draw
-                    if TicTacToe._checker(v_computer):
-                        return 1
-                    if TicTacToe._checker(v_player):
-                        return -1
-                    if len(v_player) +len(v_computer) == 9:
-                        return 0
-                    avail = list(set([1,2,3,4,5,6,7,8,9]) - set(v_player) - set(v_computer))
-                    
-                    if maxm:
-                        max_eval = -float('inf')
-                        for move in avail:
-                            v_computer.append(move)
-                            score = minimax(v_player, v_computer, False)
-                            v_computer.pop()
-                            max_eval = max(max_eval, score)
-                        return max_eval
-                    else:
-                        min_eval = float('inf')
-                        for move in avail:
-                            v_player.append(move)
-                            score = minimax(v_player, v_computer, True)
-                            v_player.pop() # Backtrack
-                            min_eval = min(min_eval, score)
-                        return min_eval
-                best_score = -float('inf')
-                computer_final_move = left_states[0] # Default fallback
-                
-                for move in left_states:
-                    # Create temporary shallow copies so we don't mess up the live game states
-                    sim_player = list(self.player_state)
-                    sim_computer = list(self.computer_state) + [move]
-                    score = minimax(sim_player, sim_computer, False)
-                    
-                    if score > best_score:
-                        best_score = score
-                        computer_final_move = move
+            min_ai=minMax(self.board_state,self.player_state,self.computer_state)
+            computer_final_move=min_ai.pred_next()
         elif self.computer_model == self.computer_models[3]:
             # computer_final_move=ai.decide_next_move(self.board_state)
             current_ai = ai_x if self.first_move == "computer" else ai_o
@@ -335,7 +258,7 @@ parse_case_file()
 import pickle
 import random
 
-class LocalTicTacToeAI:
+class qModel:
     def __init__(self, model_path: str):
         with open(model_path, "rb") as f:
             model_data = pickle.load(f)
@@ -377,9 +300,115 @@ class LocalTicTacToeAI:
             print("reverting to random , no trained model")
             chosen_action=random.choice(valid_actions)
         return chosen_action+1
+class minMax:
+    def __init__(self,board_state,player_state,computer_state):
+        self.board_state=board_state
+        self.computer_state=computer_state
+        self.player_state=player_state
+        # self.player_state=board_state[::2] #EITHER IMPORT player state and computer state 
+        self.computer_final_move =None
+    def pred_next(self):
+        left_states = list(set([1,2,3,4,5,6,7,8,9]) - set(self.board_state))
+        #minmax slow for 1st move
+        # Hardcoding the center/corner shortcut saves processing time.
+        if len(self.board_state) == 0:
+            self.computer_final_move= 5
+        else:
+            def minimax(v_player, v_computer, maxm):
+                # Base Cases: Check if virtual states result in a win or draw
+                if TicTacToe._checker(v_computer):
+                    return 1
+                if TicTacToe._checker(v_player):
+                    return -1
+                if len(v_player) +len(v_computer) == 9:
+                    return 0
+                avail = list(set([1,2,3,4,5,6,7,8,9]) - set(v_player) - set(v_computer))
+                
+                if maxm:
+                    max_eval = -float('inf')
+                    for move in avail:
+                        v_computer.append(move)
+                        score = minimax(v_player, v_computer, False)
+                        v_computer.pop()
+                        max_eval = max(max_eval, score)
+                    return max_eval
+                else:
+                    min_eval = float('inf')
+                    for move in avail:
+                        v_player.append(move)
+                        score = minimax(v_player, v_computer, True)
+                        v_player.pop() # Backtrack
+                        min_eval = min(min_eval, score)
+                    return min_eval
+            best_score = -float('inf')
+            computer_final_move = left_states[0] # Default fallback
+            for move in left_states:
+                # Create temporary shallow copies so we don't mess up the live game states
+                sim_player = list(self.player_state)
+                sim_computer = list(self.computer_state) + [move]
+                score = minimax(sim_player, sim_computer, False)
+                if score > best_score:
+                    best_score = score
+                    self.computer_final_move = move
+        if self.computer_final_move:
+            return self.computer_final_move
+class statModel:
+    def __init__(self,board_state,player_state,computer_state,first_move):
+        self.board_state=board_state 
+        self.computer_state=computer_state 
+        self.player_state=player_state 
+        self.first_move=first_move
+    def pred_next(self):
+        left_states=list(set([1,2,3,4,5,6,7,8,9])-set(self.board_state))
+        matches(self.board_state,caseList)
+        curr_total_moves=len(self.board_state)
+        # win_dict=dict()
+        win_dict={nxt:0 for nxt in left_states}
+        # lose_dict=dict() #include or not , maximsize win_dict-lose_dict?
+        lose_dict={nxt:0 for nxt in left_states}
+        
+        for case in futureCases:
+            nxt_move=case[curr_total_moves]
+            idx=caseList.index(case)
+            if stateList[idx]=="Win" and (winnerList[idx]== ("P2" if self.first_move == "player" else "P1" if self.first_move == "computer" else "")):                           
+                win_dict[nxt_move]=win_dict.get(nxt_move,0)+1
+            elif stateList[idx]=="Win" and (winnerList[idx]== ("P1" if self.first_move == "player" else "P2" if self.first_move == "computer" else "")):
+                lose_dict[nxt_move]=lose_dict.get(nxt_move,0)+1
+        final_dict={nxt:win_dict[nxt]-lose_dict[nxt] for nxt in left_states}
+        # computer_final_move = max(win_dict,key=win_dict.get) # check resource .get NOT get() , exec immediately , needs atleast 1 arg given 0
+        computer_final_move = max(final_dict,key=final_dict.get)
+        print(win_dict)
+        print(lose_dict)
+        print(final_dict)
+        for nxt in left_states:
+            temp_check=self.player_state.copy()
+            temp_check.append(nxt)
+            if TicTacToe._checker(temp_check):
+                print(temp_check)
+                print("close")
+                computer_final_move=nxt
+                break
+        for nxt in left_states:
+            temp_check=self.computer_state.copy()
+            temp_check.append(nxt)
+            if TicTacToe._checker(temp_check):
+                print(temp_check)
+                print("instawin")
+                computer_final_move=nxt
+                break
+        return computer_final_move
+
+
+MODELS = ["Random", "Statistical", "MinMax", "Q-Learning"]
+
+
+
+
+
+
 window=tk.Tk()
-ai_x = LocalTicTacToeAI("models/agent_x.pkl")
-ai_o = LocalTicTacToeAI("models/agent_o.pkl")
+ai_x = qModel("models/agent_x.pkl")
+ai_o = qModel("models/agent_o.pkl")
 # window.geometry("800x800")
 window.title("TicTacToe")
 window.lift()
