@@ -171,7 +171,7 @@ class TicTacToe:
                     lose_dict[nxt_move]=lose_dict.get(nxt_move,0)+1
             final_dict={nxt:win_dict[nxt]-lose_dict[nxt] for nxt in left_states}
             # computer_final_move = max(win_dict,key=win_dict.get) # check resource .get NOT get() , exec immediately , needs atleast 1 arg given 0
-            computer_final_move = max(final_dict,key=win_dict.get)
+            computer_final_move = max(final_dict,key=final_dict.get)
             print(win_dict)
             print(lose_dict)
             print(final_dict)
@@ -237,6 +237,10 @@ class TicTacToe:
                     if score > best_score:
                         best_score = score
                         computer_final_move = move
+        elif self.computer_model == self.computer_models[3]:
+            # computer_final_move=ai.decide_next_move(self.board_state)
+            current_ai = ai_x if self.first_move == "computer" else ai_o
+            computer_final_move = current_ai.decide_next_move(self.board_state)
         self.canvas.create_oval(eval(CircleCoords[computer_final_move]),outline="white")
         self.computer_state.append(computer_final_move)
         self.board_state.append(computer_final_move)
@@ -268,7 +272,7 @@ class App:
         self.computer_models=["Statistical","MinMax","Random","Q-Learning","Comparison"]
         for model in self.computer_models:
             # ttk.Button(self.window1, text=model,state= False if model!="Random" else True,command=lambda m=model: self.ttt_ui(computer=m)).pack(pady=3, fill='x', padx=20)
-            ttk.Button(self.window1, text=model,state= "disabled" if model not in ["Random","Statistical","MinMax"] else "normal", command=lambda m=model: self.ttt_ui(computer=m)).pack(pady=3, fill='x', padx=20)
+            ttk.Button(self.window1, text=model,state= "disabled" if model not in ["Random","Statistical","MinMax","Q-Learning"] else "normal", command=lambda m=model: self.ttt_ui(computer=m)).pack(pady=3, fill='x', padx=20)
             #disabled and normal, NOT true/false
     def clear_window(self): 
         for wd in self.window1.winfo_children(): # NOTE the hardcoded window1 attr , default must be winow
@@ -327,7 +331,55 @@ def parse_case_file():
         winnerList.append(L1[1][9:]) # P1 P2 Nil
     file.close()
 parse_case_file()
+
+import pickle
+import random
+
+class LocalTicTacToeAI:
+    def __init__(self, model_path: str):
+        with open(model_path, "rb") as f:
+            model_data = pickle.load(f)
+        self.q_table = model_data["q_table"]
+
+    def decide_next_move(self, move_history: list) -> int:
+#ql need [-1,0,0] form
+        board = [0]*9
+        
+        for idx,region in enumerate(move_history):
+            cell=region-1
+            turn = 1 if idx%2==0 else -1
+            board[cell]=turn
+        # print(board) #debug
+
+        state_tuple=tuple(board)
+        
+        valid_actions=[]
+        for i,val in enumerate(board):
+            if val==0:
+                valid_actions.append(i)
+        
+        if not valid_actions:
+            return -1 #board full , shouldnt happen but jic
+        if state_tuple in self.q_table:
+            state_scores=self.q_table[state_tuple]
+            valid_scores={}
+            for action in valid_actions:
+                valid_scores[action]=state_scores.get(action,0.0)
+            best_q=max(valid_scores.values())
+            best_actions=[]
+            for action,q in valid_scores.items():
+                if q==best_q:
+                    best_actions.append(action)
+            # chosen_action=best_actions[0] #ties always pick first , kinda predictable
+            chosen_action=random.choice(best_actions)
+        else:
+            # state not in table, model never trained on this board i guess
+            print("reverting to random , no trained model")
+            chosen_action=random.choice(valid_actions)
+        return chosen_action+1
 window=tk.Tk()
+ai_x = LocalTicTacToeAI("models/agent_x.pkl")
+ai_o = LocalTicTacToeAI("models/agent_o.pkl")
 # window.geometry("800x800")
 window.title("TicTacToe")
 window.lift()
